@@ -1,0 +1,18 @@
+tvshowinfo.py is a simple replacement script for vdr-addon-seriestimer (a.k.a VDRSeriesTimer.pl)
+
+It is in an early development state and much of the features are missing.
+I use this script learn more about the python programming language.
+
+* How to install
+Simple copy the script somewhere into your PATH.
+If you want to integrate the script into vdr with the epgsearch plugin, you have to modify the epgsearchuservars.conf in an correct way.
+
+* Example epgsearchuservars.conf
+%Season%=system(tvshowinfo.py,--show %Title% --episode %Subtitle% -fus)
+%DateVar%=%time_w% %date% %time%
+%SerieSD%=%Subtitle% ? %Subtitle% : %DateVar%
+%SerieVar1%=Serie~%Title%~%SerieSD%
+%Serie%=%Season% ? %Season% : %SerieVar1%
+
+* How to contact me
+Simply use the power of github:  https://github.com/kTitan/vdr-addon-tvshowinfo
