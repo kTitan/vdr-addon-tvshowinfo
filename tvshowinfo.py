@@ -14,15 +14,19 @@ def log(msg):
 #
 ## main
 def main():
+    # Define of variables
+    global args
+    extraargs = ""
+
     # Parse Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--show', help='Name of the tv show', required=True)
     parser.add_argument('-e', '--episode', help='Episode Title', required=True)
     parser.add_argument('-sn', '--seasonnumber', help='Season Number', required=False)
     parser.add_argument('-en', '--episodenumber',  help='Episode Number', required=False)
+    parser.add_argument('-lang', '--language',  help='Only search for results in this language', required=False)
     parser.add_argument('-fus', '--forceunderscores',  help='Force to use underscores instead of whitespaces', action='store_true')
     parser.add_argument('-v', dest='verbose', action='store_true')
-    global args
     args = parser.parse_args()
 
     # Debug Logging of tvdb_api
@@ -32,6 +36,8 @@ def main():
 
     tvshow = args.show.decode(sys.getfilesystemencoding())
     episodename = args.episode.decode(sys.getfilesystemencoding())
+    if args.language:
+        args.language = args.language.decode(sys.getfilesystemencoding())
 
     # Both variables have a minimum length
     if len(tvshow) <= 1:
@@ -41,7 +47,7 @@ def main():
         log("Episode name is to short")
         sys.exit(1)
 
-    t = tvdb_api.Tvdb(language="de")
+    t = tvdb_api.Tvdb(language=args.language)
     if args.seasonnumber and args.episodenumber:
         try:
             results = t[tvshow][args.seasonnumber][args.episodenumber]
@@ -74,13 +80,12 @@ def main():
     for x in results:
         # Keys:
         # ['episodenumber', 'rating', 'overview', 'dvd_episodenumber', 'dvd_discid', 'combined_episodenumber', 'epimgflag', 'id', 'seasonid', 'seasonnumber', 'writer', 'lastupdated', 'filename', 'absolute_number', 'ratingcount', 'combined_season', 'imdb_id', 'director', 'dvd_chapter', 'dvd_season', 'gueststars', 'seriesid', 'language', 'productioncode', 'firstaired', 'episodename']
-        if x['language'] == "de":
-            seasno = "%02d" % int(x['seasonnumber'], 0)
-            epno = "%02d" % int(x['episodenumber'], 0)
-            output = "Series"+d+tvshow+d+"Staffel_"+seasno+d+epno+" - "+x['episodename']
-            if args.forceunderscores:
-            	output = output.replace (" ", "_")
-            print output
+        seasno = "%02d" % int(x['seasonnumber'], 0)
+        epno = "%02d" % int(x['episodenumber'], 0)
+        output = "Series"+d+tvshow+d+"Staffel_"+seasno+d+epno+" - "+x['episodename']
+        if args.forceunderscores:
+        	output = output.replace (" ", "_")
+        print output
 
 
 if __name__ == "__main__":
