@@ -23,6 +23,7 @@ def main():
     parser.add_argument('-e', '--episode', help='Episode Title', required=True)
     parser.add_argument('-sn', '--seasonnumber', help='Season Number', required=False)
     parser.add_argument('-en', '--episodenumber',  help='Episode Number', required=False)
+    parser.add_argument('-oen', '--overallepisodenumber',  help='Overall Episode Number (Most time not set at thetvdb)', required=False)
     parser.add_argument('-lang', '--language',  help='Only search for results in this language', required=False)
     parser.add_argument('-fus', '--forceunderscores',  help='Force to use underscores instead of whitespaces', action='store_true')
     parser.add_argument('-v', dest='verbose', action='store_true')
@@ -42,7 +43,7 @@ def main():
     if len(tvshow) <= 1:
         log("Show name is to short")
         sys.exit(1)
-    if len(episodename) <= 1:
+    if len(episodename) <= 1 and not args.overallepisodenumber:
         log("Episode name is to short")
         sys.exit(1)
 
@@ -53,6 +54,13 @@ def main():
         except tvdb_api.tvdb_shownotfound:
             print
             log("Series "+tvshow+", "+args.seasonnumber+d+args.episodenumber+" not found.")
+            sys.exit(5)
+    elif args.overallepisodenumber:
+        try:
+            results = t[tvshow].search(args.overallepisodenumber, key = 'absolute_number')
+        except tvdb_api.tvdb_shownotfound:
+            print
+            log("Series "+tvshow+", "+args.overallepisodenumber+" not found.")
             sys.exit(5)
     else:
         results = ""
