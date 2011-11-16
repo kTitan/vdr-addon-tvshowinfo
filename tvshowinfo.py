@@ -48,7 +48,7 @@ def main():
         except tvdb_api.tvdb_shownotfound:
             print
             log("Series "+tvshow+", "+args.seasonnumber+d+args.episodenumber+" not found.")
-            sys.exit(0)
+            sys.exit(5)
     else:
         results = ""
         search = re.split('[\(\)]', episodename)
@@ -60,15 +60,15 @@ def main():
         except tvdb_api.tvdb_shownotfound:
             print
             log("Series "+tvshow+" not found.")
-            sys.exit(0)
+            sys.exit(5)
         except (tvdb_api.tvdb_episodenotfound, tvdb_api.tvdb_attributenotfound, tvdb_api.tvdb_seasonnotfound):
             print
             log("Episode "+episodenameclean+" not found.")
-            sys.exit(0)
+            sys.exit(5)
 
-    if len(results) == 0:
+    if not results:
         log("No Matching found.")
-        sys.exit(1)
+        sys.exit(5)
 
 
     for x in results:
