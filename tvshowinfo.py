@@ -72,10 +72,13 @@ def main():
             log("Episode "+episodenameclean+" not found.")
             sys.exit(5)
 
+    # Check for correct number of results
     if not results:
         log("No Matching found.")
         sys.exit(5)
-
+    elif len(results) > 1:
+    	log("To many matches found.")
+    	sys.exit(5)
 
     for x in results:
         # Keys:
