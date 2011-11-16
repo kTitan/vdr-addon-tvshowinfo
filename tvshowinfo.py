@@ -16,7 +16,6 @@ def log(msg):
 def main():
     # Define of variables
     global args
-    extraargs = ""
 
     # Parse Arguments
     parser = argparse.ArgumentParser()
