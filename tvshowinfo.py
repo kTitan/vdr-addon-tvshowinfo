@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.6
+# coding: utf-8
 import tvdb_api
-import sys, argparse, string, re, os
+import sys, argparse, string, re, os, codecs
 
 # delimiter
 d = "~"
@@ -10,6 +11,40 @@ d = "~"
 def log(msg):
     if args.verbose:
     	print "DEBUG:"+os.path.basename(__file__)+":"+msg
+
+def find_in_path(file_name, path=None):
+    path = path or '/etc/tvshowinfo:/etc/vdr/plugins/tvshowinfo'
+    for d in path.split(os.pathsep):
+        file_path = os.path.abspath(os.path.join(d, file_name))
+        if os.path.exists(file_path):
+            return file_path
+    return file_name
+
+#
+## check for naming exceptions
+## some code is from the sickbeard project
+def check_exceptions_tvshow(tvshow):
+    db_file = find_in_path('exceptions.txt')
+    db = codecs.open(db_file,'r', 'utf-8')
+    for line in db.readlines():
+        tvdb_id, sep, aliases = line.partition(':')
+
+        if not aliases:
+            continue
+
+        tvdb_id = int(tvdb_id)
+
+        # regex out the list of shows, taking \' into account
+        alias_list = [re.sub(r'\\(.)', r'\1', x) for x in re.findall(r"'(.*?)(?<!\\)',?", aliases)]
+        for alias in alias_list:
+            if alias == tvshow:
+            	searchkey = tvdb_id
+
+    # If no result is found use the show name
+    if not searchkey:
+        searchkey = tvshow
+
+    return searchkey
 
 #
 ## main
@@ -39,6 +74,9 @@ def main():
     if args.language:
         args.language = args.language.decode(sys.getfilesystemencoding())
 
+    # check for correct searchkey
+    tvshow_searchkey = check_exceptions_tvshow(tvshow)
+
     # Both variables have a minimum length
     if len(tvshow) <= 1:
         log("Show name is to short")
@@ -50,14 +88,14 @@ def main():
     t = tvdb_api.Tvdb(language=args.language)
     if args.seasonnumber and args.episodenumber:
         try:
-            results = t[tvshow][args.seasonnumber][args.episodenumber]
+            results = t[tvshow_searchkey][args.seasonnumber][args.episodenumber]
         except tvdb_api.tvdb_shownotfound:
             print
             log("Series "+tvshow+", "+args.seasonnumber+d+args.episodenumber+" not found.")
             sys.exit(5)
     elif args.overallepisodenumber:
         try:
-            results = t[tvshow].search(args.overallepisodenumber, key = 'absolute_number')
+            results = t[tvshow_searchkey].search(args.overallepisodenumber, key = 'absolute_number')
         except tvdb_api.tvdb_shownotfound:
             print
             log("Series "+tvshow+", "+args.overallepisodenumber+" not found.")
@@ -69,7 +107,7 @@ def main():
         log("Searching for episodename "+episodenameclean)
 
         try:
-            results = t[tvshow].search(episodenameclean, key = 'episodename')
+            results = t[tvshow_searchkey].search(episodenameclean, key = 'episodename')
         except tvdb_api.tvdb_shownotfound:
             print
             log("Series "+tvshow+" not found.")
