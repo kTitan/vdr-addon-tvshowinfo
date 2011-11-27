@@ -104,8 +104,18 @@ def main():
             sys.exit(5)
     else:
         results = ""
-        search = re.split('[\(\)]', episodename)
+
+        # clean not needed data
+        search = re.split('[\(\)]', episodename, 2)
         episodenameclean=string.strip(search[0])
+        # add again number extensions
+        for ext in search:
+            try:
+                n = int(ext)
+                episodenameclean=episodenameclean+" ("+string.strip(ext)+")"
+            except:
+                continue
+
         log("Searching for episodename "+episodenameclean)
 
         try:
