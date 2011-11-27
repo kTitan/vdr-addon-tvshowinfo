@@ -24,6 +24,7 @@ def find_in_path(file_name, path=None):
 ## check for naming exceptions
 ## some code is from the sickbeard project
 def check_exceptions_tvshow(tvshow):
+    searchkey = ""
     db_file = find_in_path('exceptions.txt')
     db = codecs.open(db_file,'r', 'utf-8')
     for line in db.readlines():
