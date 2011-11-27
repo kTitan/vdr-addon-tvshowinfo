@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.6
-# coding: utf-8
+# -*- coding: utf-8 -*-
 import tvdb_api
 import sys, argparse, string, re, os, codecs
 
@@ -77,6 +77,7 @@ def main():
 
     # check for correct searchkey
     tvshow_searchkey = check_exceptions_tvshow(tvshow)
+    log("Searching for show "+str(tvshow_searchkey))
 
     # Both variables have a minimum length
     if len(tvshow) <= 1:
@@ -134,7 +135,7 @@ def main():
         output = "Series"+d+tvshow+d+"Staffel_"+seasno+d+epno+" - "+x['episodename']
         if args.forceunderscores:
         	output = output.replace (" ", "_")
-        print output
+        print output.encode(sys.getfilesystemencoding())
 
 
 if __name__ == "__main__":
