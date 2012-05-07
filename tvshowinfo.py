@@ -1,16 +1,18 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python3.2
 # -*- coding: utf-8 -*-
-import tvdb_api
+from pytvdbapi import api
 import sys, argparse, string, re, os, codecs
 
 # delimiter
 d = "~"
 
+tvdb_api_key = "083D567677C1B555"
+
 #
 ## logging
 def log(msg):
     if args.verbose:
-    	print "DEBUG:"+os.path.basename(__file__)+":"+msg
+    	print("DEBUG:"+os.path.basename(__file__)+":"+msg)
 
 def find_in_path(file_name, path=None):
     path = path or '/etc/tvshowinfo:/etc/vdr/plugins/tvshowinfo'
@@ -54,13 +56,15 @@ def main():
     global args
 
     # Parse Arguments
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Options for finding the tvshow information.',
+        epilog='All data is provided from http://www.thetvdb.com')
     parser.add_argument('-s', '--show', help='Name of the tv show', required=True)
     parser.add_argument('-e', '--episode', help='Episode Title', required=True)
-    parser.add_argument('-sn', '--seasonnumber', help='Season Number', required=False)
-    parser.add_argument('-en', '--episodenumber',  help='Episode Number', required=False)
-    parser.add_argument('-oen', '--overallepisodenumber',  help='Overall Episode Number (Most time not set at thetvdb)', required=False)
-    parser.add_argument('-lang', '--language',  help='Only search for results in this language', required=False)
+    parser.add_argument('-sn', '--seasonnumber', help='Season Number', required=False, type=int)
+    parser.add_argument('-en', '--episodenumber',  help='Episode Number', required=False, type=int)
+    parser.add_argument('-oen', '--overallepisodenumber',  help='Overall Episode Number (Most time not set at thetvdb)', required=False, type=int)
+    parser.add_argument('-lang', '--language',  help='Only search for results in this language', required=False, default='en')
     parser.add_argument('-fus', '--forceunderscores',  help='Force to use underscores instead of whitespaces', action='store_true')
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
@@ -70,10 +74,12 @@ def main():
         import logging
         logging.basicConfig(level = logging.DEBUG)
 
-    tvshow = args.show.decode(sys.getfilesystemencoding())
-    episodename = args.episode.decode(sys.getfilesystemencoding())
+    tvshow = args.show
+    episodename = args.episode
     if args.language:
-        args.language = args.language.decode(sys.getfilesystemencoding())
+        args.language = args.language
+    else:
+    	args.language = default_lang
 
     # check for correct searchkey
     tvshow_searchkey = check_exceptions_tvshow(tvshow)
@@ -87,65 +93,67 @@ def main():
         log("Episode name is to short")
         sys.exit(1)
 
-    t = tvdb_api.Tvdb(language=args.language)
+	# use new pytvdbapi
+    db = api.TVDB(tvdb_api_key)
+    dbsearch = db.search(tvshow_searchkey, args.language)
+    show = dbsearch[0]
+
     if args.seasonnumber and args.episodenumber:
         try:
-            results = t[tvshow_searchkey][args.seasonnumber][args.episodenumber]
-        except tvdb_api.tvdb_shownotfound:
-            print
+            results = show[args.seasonnumber][args.episodenumber]
+        except:
+            print()
             log("Series "+tvshow+", "+args.seasonnumber+d+args.episodenumber+" not found.")
             sys.exit(5)
+
     elif args.overallepisodenumber:
-        try:
-            results = t[tvshow_searchkey].search(args.overallepisodenumber, key = 'absolute_number')
-        except tvdb_api.tvdb_shownotfound:
-            print
+        # loop through the episodes to find matching
+        for season in show:
+            for episode in season:
+                if episode.absolute_number == args.overallepisodenumber:
+                    results=episode
+
+        if not results:
+            print()
             log("Series "+tvshow+", "+args.overallepisodenumber+" not found.")
             sys.exit(5)
-    else:
-        results = ""
 
+    else:
         # clean not needed data
         search = re.split('[\(\)]', episodename, 2)
-        episodenameclean=string.strip(search[0])
+        episodenameclean=search[0].strip()
         # add again number extensions
         for ext in search:
             try:
                 n = int(ext)
-                episodenameclean=episodenameclean+" ("+string.strip(ext)+")"
+                episodenameclean=episodenameclean+" ("+ext.strip()+")"
             except:
                 continue
 
         log("Searching for episodename "+episodenameclean)
 
-        try:
-            results = t[tvshow_searchkey].search(episodenameclean, key = 'episodename')
-        except tvdb_api.tvdb_shownotfound:
-            print
-            log("Series "+tvshow+" not found.")
-            sys.exit(5)
-        except (tvdb_api.tvdb_episodenotfound, tvdb_api.tvdb_attributenotfound, tvdb_api.tvdb_seasonnotfound):
-            print
-            log("Episode "+episodenameclean+" not found.")
+        # loop through the episodes to find matching
+        for season in show:
+            for episode in season:
+                if episode.EpisodeName == episodenameclean:
+                    results=episode
+
+        if not results:
+            print()
+            log("Series "+tvshow+"/"+episodenameclean+" not found.")
             sys.exit(5)
 
     # Check for correct number of results
     if not results:
         log("No Matching found.")
         sys.exit(5)
-    elif len(results) > 1:
-    	log("To many matches found.")
-    	sys.exit(5)
 
-    for x in results:
-        # Keys:
-        # ['episodenumber', 'rating', 'overview', 'dvd_episodenumber', 'dvd_discid', 'combined_episodenumber', 'epimgflag', 'id', 'seasonid', 'seasonnumber', 'writer', 'lastupdated', 'filename', 'absolute_number', 'ratingcount', 'combined_season', 'imdb_id', 'director', 'dvd_chapter', 'dvd_season', 'gueststars', 'seriesid', 'language', 'productioncode', 'firstaired', 'episodename']
-        seasno = "%02d" % int(x['seasonnumber'], 0)
-        epno = "%02d" % int(x['episodenumber'], 0)
-        output = "Series"+d+tvshow+d+"Staffel_"+seasno+d+epno+" - "+x['episodename']
-        if args.forceunderscores:
-        	output = output.replace (" ", "_")
-        print output.encode(sys.getfilesystemencoding())
+    seasno = "%02d" % results.SeasonNumber
+    epno = "%02d" % results.EpisodeNumber
+    output = "Series"+d+tvshow+d+"Staffel_"+seasno+d+epno+" - "+results.EpisodeName
+    if args.forceunderscores:
+    	output = output.replace (" ", "_")
+    print(output)
 
 
 if __name__ == "__main__":

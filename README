@@ -3,6 +3,10 @@ tvshowinfo.py is a simple replacement script for vdr-addon-seriestimer (a.k.a VD
 It is in an early development state and much of the features are missing.
 I use this script learn more about the python programming language.
 
+* Dependencies
+tvshowinfo depends on the following packages to function:
+    - pytvdbapi <https://github.com/fuzzycode/pytvdbapi>
+
 * How to install
 Simple copy the script somewhere into your PATH.
 If you want to integrate the script into vdr with the epgsearch plugin, you have to modify the epgsearchuservars.conf in an correct way.
