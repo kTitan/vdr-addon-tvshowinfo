@@ -3,6 +3,9 @@ tvshowinfo.py is a simple replacement script for vdr-addon-seriestimer (a.k.a VD
 It is in an early development state and much of the features are missing.
 I use this script learn more about the python programming language.
 
+If you are using this scripts for your own project please request an own api key here:
+http://thetvdb.com/?tab=apiregister
+
 * Dependencies
 tvshowinfo depends on the following packages to function:
     - pytvdbapi <https://github.com/fuzzycode/pytvdbapi>

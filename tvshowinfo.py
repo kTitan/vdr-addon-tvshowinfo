@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.2
 # -*- coding: utf-8 -*-
 from pytvdbapi import api
-import sys, argparse, string, re, os, codecs
+import sys, argparse, re, os, codecs
 
 # delimiter
 d = "~"
@@ -14,6 +14,8 @@ def log(msg):
     if args.verbose:
     	print("DEBUG:"+os.path.basename(__file__)+":"+msg)
 
+#
+## Search for file in defined pathes
 def find_in_path(file_name, path=None):
     path = path or '/etc/tvshowinfo:/etc/vdr/plugins/tvshowinfo'
     for d in path.split(os.pathsep):
@@ -21,6 +23,12 @@ def find_in_path(file_name, path=None):
         if os.path.exists(file_path):
             return file_path
     return file_name
+
+#
+## Print Error and exit
+def e_error(description, exit_code=1):
+	log(description)
+	sys.exit(exit_code)
 
 #
 ## check for naming exceptions
@@ -76,10 +84,6 @@ def main():
 
     tvshow = args.show
     episodename = args.episode
-    if args.language:
-        args.language = args.language
-    else:
-    	args.language = default_lang
 
     # check for correct searchkey
     tvshow_searchkey = check_exceptions_tvshow(tvshow)
@@ -87,11 +91,9 @@ def main():
 
     # Both variables have a minimum length
     if len(tvshow) <= 1:
-        log("Show name is to short")
-        sys.exit(1)
+        e_error("Show name is to short", 1)
     if len(episodename) <= 1 and not args.overallepisodenumber:
-        log("Episode name is to short")
-        sys.exit(1)
+        e_error("Episode name is to short", 1)
 
 	# use new pytvdbapi
     db = api.TVDB(tvdb_api_key)
@@ -102,9 +104,7 @@ def main():
         try:
             results = show[args.seasonnumber][args.episodenumber]
         except:
-            print()
-            log("Series "+tvshow+", "+args.seasonnumber+d+args.episodenumber+" not found.")
-            sys.exit(5)
+            e_error("Series "+tvshow+", "+args.seasonnumber+d+args.episodenumber+" not found.", 5)
 
     elif args.overallepisodenumber:
         # loop through the episodes to find matching
@@ -113,11 +113,10 @@ def main():
                 if episode.absolute_number == args.overallepisodenumber:
                     results=episode
 
-        if not results:
-            print()
-            log("Series "+tvshow+", "+args.overallepisodenumber+" not found.")
-            sys.exit(5)
-
+        try:
+        	results
+        except:
+            e_error("Series "+tvshow+", "+args.overallepisodenumber+" not found.", 5)
     else:
         # clean not needed data
         search = re.split('[\(\)]', episodename, 2)
@@ -138,15 +137,16 @@ def main():
                 if episode.EpisodeName == episodenameclean:
                     results=episode
 
-        if not results:
-            print()
-            log("Series "+tvshow+"/"+episodenameclean+" not found.")
-            sys.exit(5)
+        try:
+        	results
+        except:
+            e_error("Series "+tvshow+"/"+episodenameclean+" not found.", 5)
 
     # Check for correct number of results
-    if not results:
-        log("No Matching found.")
-        sys.exit(5)
+    try:
+    	results
+    except:
+        e_error("No Matching found.", 5)
 
     seasno = "%02d" % results.SeasonNumber
     epno = "%02d" % results.EpisodeNumber
