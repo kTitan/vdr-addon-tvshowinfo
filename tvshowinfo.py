@@ -42,6 +42,10 @@ def check_exceptions_tvshow(tvshow):
     """
     check for naming exceptions
     some code of this is from the sickbeard project
+
+    currently this is not working.
+    this feature will need pytvdbapi v0.3 which is
+    currently in development.
     """
     searchkey = ""
     db_file = find_in_path('exceptions.txt')
