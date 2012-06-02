@@ -1,0 +1,11 @@
+language: python
+
+python:
+  - "3.2"
+
+install:
+  - pip install pytvdbapi --use-mirrors
+  - pip install vvv --use-mirrors
+
+# command to run tests
+script: vvv .
