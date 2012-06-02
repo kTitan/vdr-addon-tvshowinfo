@@ -5,7 +5,6 @@ python:
 
 install:
   - pip install pytvdbapi --use-mirrors
-  - pip install vvv --use-mirrors
+  - pip install pep8 --use-mirrors
 
-# command to run tests
-script: vvv .
+script: pep8 -r --statistics --count --ignore=E501 .
