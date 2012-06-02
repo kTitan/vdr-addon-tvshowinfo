@@ -7,4 +7,4 @@ install:
   - pip install pytvdbapi --use-mirrors
   - pip install pep8 --use-mirrors
 
-script: pep8 -r --statistics --count --ignore=E501 .
+script: pep8 -r --statistics --count --ignore=E501 .; vvv .

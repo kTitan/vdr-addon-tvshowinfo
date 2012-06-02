@@ -1,0 +1,11 @@
+linelength:
+  length: 250
+
+# Python additional configuration
+
+pylint:
+
+  host-python-env: true
+
+  python3k: true
+
