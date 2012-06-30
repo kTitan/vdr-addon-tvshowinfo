@@ -1,2 +1,3 @@
 80159:  'Sanctuary', 'Sanctuary US', 'Sanctuary - Wächter der Kreaturen',
 95511:  'Life Unexpected', 'Life Unexpected - Plötzlich Familie'
+82066:  'Fringe', 'Fringe - Grenzfälle des FBI'
