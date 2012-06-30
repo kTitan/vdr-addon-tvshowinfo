@@ -8,7 +8,7 @@ http://thetvdb.com/?tab=apiregister
 
 * Dependencies
 tvshowinfo depends on the following packages to function:
-    - pytvdbapi <https://github.com/fuzzycode/pytvdbapi>
+    - pytvdbapi <https://github.com/fuzzycode/pytvdbapi> (at lest v0.3)
 
 * How to install
 Simple copy the script somewhere into your PATH.

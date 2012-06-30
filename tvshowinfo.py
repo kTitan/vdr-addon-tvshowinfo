@@ -42,10 +42,6 @@ def check_exceptions_tvshow(tvshow):
     """
     check for naming exceptions
     some code of this is from the sickbeard project
-
-    currently this is not working.
-    this feature will need pytvdbapi v0.3 which is
-    currently in development.
     """
     searchkey = ""
     db_file = find_in_path('exceptions.txt')
@@ -63,12 +59,7 @@ def check_exceptions_tvshow(tvshow):
         for alias in alias_list:
             if alias == tvshow:
                 searchkey = tvdb_id
-
-    # If no result is found use the show name
-    if not searchkey:
-        searchkey = tvshow
-
-    return searchkey
+                return searchkey
 
 
 def query_tvdb(args):
@@ -79,10 +70,6 @@ def query_tvdb(args):
     tvshow = args.show
     episodename = args.episode
 
-    # check for correct searchkey
-    tvshow_searchkey = check_exceptions_tvshow(tvshow)
-    logging.debug("Searching for show " + str(tvshow_searchkey))
-
     # Both variables have a minimum length
     if len(tvshow) <= 1:
         e_error("Show name is to short", 1)
@@ -91,13 +78,21 @@ def query_tvdb(args):
 
     # use new pytvdbapi
     db_connection = api.TVDB(__tvdb_apikey__)
-    dbsearch = db_connection.search(tvshow_searchkey, args.language)
 
-    # Is the show avaiable
-    try:
-        show = dbsearch[0]
-    except api.error.PytvdbapiError:
-        e_error("Series " + tvshow + " not found.", 5)
+    # check for local exception
+    tvshow_id = check_exceptions_tvshow(tvshow)
+    if tvshow_id:
+        logging.debug("Searching for show " + str(tvshow_id))
+        show = db_connection.get(tvshow_id, args.language)  # pylint: disable-msg=E1101
+    else:
+        logging.debug("Searching for show " + str(tvshow))
+        dbsearch = db_connection.search(tvshow, args.language)
+
+        # Is the show avaiable
+        try:
+            show = dbsearch[0]
+        except api.error.PytvdbapiError:
+            e_error("Series " + tvshow + " not found.", 5)
 
     if args.seasonnumber and args.episodenumber:
         try:
