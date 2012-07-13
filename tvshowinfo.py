@@ -128,7 +128,7 @@ def query_tvdb(args):
         # loop through the episodes to find matching
         for season in show:
             for episode in season:
-                if episode.EpisodeName.lower() == episodenameclean.lower():
+                if str(episode.EpisodeName).lower() == episodenameclean.lower():
                     results = episode
 
         # check if we got results
