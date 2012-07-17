@@ -9,6 +9,7 @@ and give the data back to stdout so it can be used with the vdr epgsearch plugin
 from pytvdbapi import api
 import argparse
 import codecs
+import difflib
 import logging
 import os
 import re
@@ -36,6 +37,35 @@ def e_error(description, exit_code=1):
     """
     logging.debug(description)
     sys.exit(exit_code)
+
+
+def s_clean(value):
+    """
+    Clean a string (episode) from unneeded information
+    """
+    search = re.split('[\(\)]', value, 2)
+    value = search[0].strip()
+    # add again number extensions
+    for ext in search:
+        try:
+            int(ext)
+
+            # add the ext only if it is not the complete name
+            if value != ext.strip():
+                value = value + " (" + ext.strip() + ")"
+
+        except:  # pylint: disable-msg=W0702
+            continue
+
+    return value
+
+
+def s_prepare(value):
+    """
+    Prepare a string by removing all special characters from it
+    """
+    value = re.sub('[^A-Za-z0-9 ]', '', str(value).lower())
+    return value
 
 
 def check_exceptions_tvshow(tvshow):
@@ -112,16 +142,7 @@ def query_tvdb(args):
         except api.error.PytvdbapiError:
             e_error("Series " + tvshow + ", " + str(args.overallepisodenumber) + " not found.", 5)
     else:
-        # clean not needed data
-        search = re.split('[\(\)]', episodename, 2)
-        episodenameclean = search[0].strip()
-        # add again number extensions
-        for ext in search:
-            try:
-                int(ext)
-                episodenameclean = episodenameclean + " (" + ext.strip() + ")"
-            except:  # pylint: disable-msg=W0702
-                continue
+        episodenameclean = s_clean(episodename)
 
         logging.debug("Searching for episodename " + episodenameclean)
 
@@ -130,6 +151,20 @@ def query_tvdb(args):
             for episode in season:
                 if str(episode.EpisodeName).lower() == episodenameclean.lower():
                     results = episode
+
+        # loop again with fuzzy search, if no result was found
+        try:
+            results
+        except NameError:
+            # clean string for fuzzy matching
+            episodennamestripped = s_prepare(episodenameclean)
+
+            for season in show:
+                for episode in season:
+                    fuzzysearch = difflib.SequenceMatcher(None, s_prepare(episode.EpisodeName), episodennamestripped).ratio()
+                    if fuzzysearch >= 0.90:
+                        logging.debug("Matched Episode with fuzzy ratio of " + str(fuzzysearch))
+                        results = episode
 
         # check if we got results
         try:
